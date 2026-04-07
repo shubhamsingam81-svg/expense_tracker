@@ -2,11 +2,13 @@
     "name": "Daily Expense Tracker",
     "short_name": "Expenses",
     "description": "Track your daily expenses with ease",
-    "start_url": "/",
+    "start_url": "./",
     "display": "standalone",
+    "scope": "./",
     "background_color": "#0a0a1a",
     "theme_color": "#1a1a2e",
     "orientation": "portrait",
+    "prefer_related_applications": false,
     "icons": [
         {
             "src": "icons/icon-192.png",

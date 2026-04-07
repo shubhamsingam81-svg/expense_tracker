@@ -56,9 +56,13 @@ function init() {
     initCalendar();
     initAnalytics();
     initSearch();
-    processRecurring();
-    updateAll();
     setHeaderDate();
+    
+    // Load data asynchronously to prevent splash screen blocking
+    setTimeout(() => {
+        processRecurring();
+        updateAll();
+    }, 100);
 }
 
 // ─── Data Persistence ───
@@ -91,6 +95,12 @@ function migrateV1() {
         } catch (e) {}
     }
 }
+function initSettings() {
+    if (!settings.currency) settings.currency = '₹';
+    if (settings.isDark === undefined) settings.isDark = !window.matchMedia('(prefers-color-scheme: light)').matches;
+    if (settings.isDark) document.body.classList.remove('light-theme');
+    else document.body.classList.add('light-theme');
+}
 
 // ─── Utilities ───
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
@@ -98,20 +108,19 @@ function currency() { return settings.currency || '₹'; }
 function fmt(n) { return currency() + Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
 function today() { return new Date().toISOString().slice(0, 10); }
 function monthKey(d) { return d.slice(0, 7); }
-function weekStart() {
-    const d = new Date(); d.setDate(d.getDate() - d.getDay());
-    return d.toISOString().slice(0, 10);
-}
+function weekStart() { const d = new Date(); d.setDate(d.getDate() - d.getDay()); return d.toISOString().slice(0, 10); }
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
 // ─── Splash ───
 function initSplash() {
     createSplashParticles();
     setTimeout(() => {
-        $('splash').classList.add('hidden');
-        $('app').classList.remove('hidden');
+        const splash = $('splash');
+        const app = $('app');
+        if (splash) splash.classList.add('hidden');
+        if (app) app.classList.remove('hidden');
         triggerPageAnimations();
-    }, 1800);
+    }, 1200);
 }
 function createSplashParticles() {
     const c = $('splashParticles');
@@ -163,41 +172,15 @@ function retriggerAnimations(page) {
     });
 }
 
-// ─── Settings ───
-function initSettings() {
-    if (settings.dark === undefined) settings.dark = true;
-    applyTheme();
-    $('currencySymbol').textContent = currency();
-}
-function applyTheme() {
-    document.body.classList.toggle('light-theme', !settings.dark);
-}
-function initSettingsModal() {
-    $('btnSettings').addEventListener('click', () => {
-        $('settingCurrency').value = settings.currency || '₹';
-        $('settingDark').checked = settings.dark !== false;
-        toggleOverlay('settingsOverlay', true);
-    });
-    $('btnSettingsClose').addEventListener('click', () => toggleOverlay('settingsOverlay', false));
-    $('settingCurrency').addEventListener('change', e => {
-        settings.currency = e.target.value;
-        $('currencySymbol').textContent = currency();
-        save(); updateAll();
-    });
-    $('settingDark').addEventListener('change', e => {
-        settings.dark = e.target.checked;
-        applyTheme(); save();
-    });
-    $('btnExportAll').addEventListener('click', exportCSV);
-    $('btnImport').addEventListener('click', () => $('fileImport').click());
-    $('fileImport').addEventListener('change', importCSV);
-    $('btnClearAll').addEventListener('click', () => {
-        if (confirm('Clear ALL data? This cannot be undone.')) {
-            expenses = []; incomes = []; recurring = []; budgets = {}; goal = 0;
-            save(); updateAll(); toast('All data cleared');
-            toggleOverlay('settingsOverlay', false);
-        }
-    });
+// ─── Toast ───
+function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.remove('hidden', 'toast-out');
+    setTimeout(() => {
+        t.classList.add('toast-out');
+        setTimeout(() => t.classList.add('hidden'), 300);
+    }, 2000);
 }
 
 // ─── Add/Edit Modal ───
@@ -678,6 +661,35 @@ function updateHome() {
     checkNotifications(totalExp, totalInc);
 }
 
+// ─── Settings ───
+function initSettingsModal() {
+    $('btnSettings').addEventListener('click', () => {
+        $('settingDark').checked = !document.body.classList.contains('light-theme');
+        $('settingCurrency').value = settings.currency || '₹';
+        toggleOverlay('settingsOverlay', true);
+    });
+    $('btnSettingsClose').addEventListener('click', () => toggleOverlay('settingsOverlay', false));
+    $('settingDark').addEventListener('change', (e) => {
+        document.body.classList.toggle('light-theme', !e.target.checked);
+        settings.isDark = e.target.checked;
+        save();
+    });
+    $('settingCurrency').addEventListener('change', (e) => {
+        settings.currency = e.target.value;
+        save(); updateAll();
+    });
+    $('btnExportAll').addEventListener('click', exportCSV);
+    $('btnImport').addEventListener('click', () => $('fileImport').click());
+    $('fileImport').addEventListener('change', importCSV);
+    $('btnClearAll').addEventListener('click', () => {
+        if (confirm('Clear ALL data? This cannot be undone!')) {
+            expenses = []; incomes = []; recurring = []; budgets = {}; goal = 0;
+            save(); updateAll(); toggleOverlay('settingsOverlay', false);
+            toast('All data cleared');
+        }
+    });
+}
+
 // ─── Animated Counter ───
 function animateCounter(el, target) {
     const c = currency();
@@ -1149,21 +1161,6 @@ function toggleOverlay(id, show) {
     }
 }
 
-// ─── Toast ───
-function toast(msg) {
-    const el = $('toast');
-    el.textContent = msg;
-    el.classList.remove('hidden', 'toast-out');
-    el.style.animation = 'none';
-    el.offsetHeight;
-    el.style.animation = '';
-    clearTimeout(el._timeout);
-    el._timeout = setTimeout(() => {
-        el.classList.add('toast-out');
-        setTimeout(() => el.classList.add('hidden'), 300);
-    }, 2500);
-}
-
 // ─── Sanitize ───
 function sanitize(str) {
     if (!str) return '';
@@ -1179,5 +1176,15 @@ if ('serviceWorker' in navigator) {
 
 // ─── Start ───
 document.addEventListener('DOMContentLoaded', init);
+
+// Failsafe: Force app to show after 5 seconds
+setTimeout(() => {
+    const splash = $('splash');
+    const app = $('app');
+    if (splash && !splash.classList.contains('hidden')) {
+        splash.classList.add('hidden');
+        if (app) app.classList.remove('hidden');
+    }
+}, 5000);
 
 })();
