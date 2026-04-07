@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Expenses">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Expense Tracker Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ─── Animated Background ─── -->
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- ─── Splash Screen ─── -->
+    <div id="splash" class="splash">
+        <div class="splash-content">
+            <div class="splash-logo">
+                <div class="splash-ring"></div>
+                <span class="splash-icon">💰</span>
+            </div>
+            <div class="splash-title">Expense Tracker</div>
+            <div class="splash-sub">Track smarter. Spend wiser.</div>
+            <div class="splash-dots"><span></span><span></span><span></span></div>
+        </div>
+        <div class="splash-particles" id="splashParticles"></div>
+    </div>
+
+    <!-- ─── App ─── -->
+    <div id="app" class="app hidden">
+
+        <!-- Header -->
+        <header class="header glass-header">
+            <div class="header-left">
+                <h1 class="header-title">Expenses</h1>
+                <p class="header-date" id="headerDate"></p>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn pulse-hover" id="btnNotifications">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                    <span class="notif-badge hidden" id="notifBadge">!</span>
+                </button>
+                <button class="icon-btn pulse-hover" id="btnSettings">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Tabs -->
+        <nav class="tab-bar glass-tab">
+            <button class="tab active" data-tab="home"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span><div class="tab-indicator"></div></button>
+            <button class="tab" data-tab="calendar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span><div class="tab-indicator"></div></button>
+            <button class="tab add-btn" id="btnAdd"><div class="add-circle"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></button>
+            <button class="tab" data-tab="analytics"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Analytics</span><div class="tab-indicator"></div></button>
+            <button class="tab" data-tab="budget"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg><span>Budget</span><div class="tab-indicator"></div></button>
+        </nav>
+
+        <!-- HOME -->
+        <section class="page active" id="page-home">
+            <div class="scroll-content">
+                <!-- Hero Balance -->
+                <div class="hero-card animate-in">
+                    <div class="hero-glow"></div>
+                    <div class="hero-top">
+                        <div>
+                            <div class="hero-label">Net Balance</div>
+                            <div class="hero-amount" id="netBalance"><span class="counter" data-target="0">₹0</span></div>
+                            <div class="hero-month" id="heroMonth">April 2026</div>
+                        </div>
+                        <button class="income-btn glow-btn" id="btnAddIncome"><span class="btn-shine"></span>+ Income</button>
+                    </div>
+                    <div class="hero-divider"></div>
+                    <div class="hero-stats">
+                        <div class="hero-stat animate-in" style="--delay:0.1s">
+                            <div class="hero-stat-ring green-ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="var(--green)" stroke-width="3" stroke-dasharray="100" stroke-dashoffset="100" class="ring-progress" id="incomeRing"/></svg></div>
+                            <div><div class="hero-stat-label">Income</div><div class="hero-stat-value green-text" id="monthIncome">₹0</div></div>
+                        </div>
+                        <div class="hero-stat animate-in" style="--delay:0.2s">
+                            <div class="hero-stat-ring red-ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="var(--red)" stroke-width="3" stroke-dasharray="100" stroke-dashoffset="100" class="ring-progress" id="expenseRing"/></svg></div>
+                            <div><div class="hero-stat-label">Expenses</div><div class="hero-stat-value red-text" id="monthExpense">₹0</div></div>
+                        </div>
+                        <div class="hero-stat animate-in" style="--delay:0.3s">
+                            <div class="hero-stat-ring orange-ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="var(--orange)" stroke-width="3" stroke-dasharray="100" stroke-dashoffset="100" class="ring-progress" id="todayRing"/></svg></div>
+                            <div><div class="hero-stat-label">Today</div><div class="hero-stat-value" id="todayTotal">₹0</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insight -->
+                <div class="insight-card glass-card animate-in" style="--delay:0.15s" id="insightCard">
+                    <div class="insight-glow"></div>
+                    <span class="insight-icon bounce-loop">💡</span>
+                    <span class="insight-text" id="insightText">Add expenses to get insights</span>
+                </div>
+
+                <!-- Streak -->
+                <div class="streak-card glass-card animate-in" style="--delay:0.2s">
+                    <div class="streak-flames" id="streakFlames"></div>
+                    <div class="streak-info"><span class="streak-fire wiggle-loop">🔥</span><span class="streak-text" id="streakText">0 day streak</span></div>
+                    <div class="streak-bar"><div class="streak-bar-fill" id="streakBarFill"></div></div>
+                    <div class="streak-sub" id="streakSub">Log daily to build your streak!</div>
+                </div>
+
+                <!-- Mini Stats -->
+                <div class="mini-stats">
+                    <div class="mini-stat-card glass-card animate-in" style="--delay:0.25s"><div class="mini-stat-icon">📅</div><div class="mini-stat-value" id="weekTotal">₹0</div><div class="mini-stat-label">This Week</div></div>
+                    <div class="mini-stat-card glass-card animate-in" style="--delay:0.3s"><div class="mini-stat-icon">📊</div><div class="mini-stat-value" id="dailyAvg">₹0</div><div class="mini-stat-label">Daily Avg</div></div>
+                    <div class="mini-stat-card glass-card animate-in" style="--delay:0.35s"><div class="mini-stat-icon">🔢</div><div class="mini-stat-value" id="txCount">0</div><div class="mini-stat-label">Entries</div></div>
+                </div>
+
+                <!-- Recurring -->
+                <div class="section animate-in" style="--delay:0.4s" id="recurringSection">
+                    <div class="section-header"><h2 class="section-title">📌 Recurring</h2><button class="link-btn shimmer-btn" id="btnManageRecurring">Manage</button></div>
+                    <div class="recurring-list" id="recurringList"></div>
+                </div>
+
+                <!-- Top Categories -->
+                <div class="section animate-in" style="--delay:0.45s"><h2 class="section-title">Top Categories</h2><div class="category-chips" id="topCategories"></div></div>
+
+                <!-- Recent -->
+                <div class="section animate-in" style="--delay:0.5s">
+                    <div class="section-header"><h2 class="section-title">Recent Expenses</h2><button class="link-btn shimmer-btn" data-tab="calendar">See All</button></div>
+                    <div class="transaction-list" id="recentList"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CALENDAR -->
+        <section class="page" id="page-calendar">
+            <div class="scroll-content">
+                <div class="calendar-nav animate-in"><button class="cal-nav-btn glass-card" id="calPrev">‹</button><h2 class="cal-month-title" id="calMonthTitle">April 2026</h2><button class="cal-nav-btn glass-card" id="calNext">›</button></div>
+                <div class="calendar-heatmap glass-card animate-in" style="--delay:0.1s" id="calendarGrid"></div>
+                <div class="cal-legend"><span class="cal-legend-item"><span class="cal-box" style="background:var(--bg-elevated)"></span>₹0</span><span class="cal-legend-item"><span class="cal-box heat-low"></span>Low</span><span class="cal-legend-item"><span class="cal-box heat-mid"></span>Mid</span><span class="cal-legend-item"><span class="cal-box heat-high"></span>High</span></div>
+                <div class="section animate-in" style="--delay:0.2s"><h2 class="section-title" id="calDayTitle">Today</h2><div class="transaction-list" id="calDayList"></div><div class="empty-state hidden" id="calEmpty"><div class="empty-icon float-loop">📅</div><p>No expenses on this day</p></div></div>
+                <div class="section animate-in" style="--delay:0.3s">
+                    <div class="search-bar glass-card"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="searchInput" placeholder="Search expenses..."></div>
+                    <div class="filter-row"><select id="filterCategory" class="filter-select glass-card"><option value="">All Categories</option></select><select id="filterPayment" class="filter-select glass-card"><option value="">All Payments</option></select><button class="filter-btn glow-btn" id="btnExport">CSV</button></div>
+                    <div class="transaction-list" id="historyList"></div>
+                    <div class="empty-state hidden" id="emptyHistory"><div class="empty-icon float-loop">📭</div><p>No expenses found</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ANALYTICS -->
+        <section class="page" id="page-analytics">
+            <div class="scroll-content">
+                <div class="analytics-period glass-card animate-in"><button class="period-btn active" data-period="week">Week</button><button class="period-btn" data-period="month">Month</button><button class="period-btn" data-period="year">Year</button></div>
+                <div class="chart-card glass-card animate-in" style="--delay:0.1s"><h3 class="chart-title">Income vs Expenses</h3><canvas id="incomeExpenseChart"></canvas></div>
+                <div class="chart-card glass-card animate-in" style="--delay:0.15s"><h3 class="chart-title">Spending Trend</h3><canvas id="trendChart"></canvas></div>
+                <div class="chart-card glass-card animate-in" style="--delay:0.2s"><h3 class="chart-title">By Category</h3><canvas id="categoryChart"></canvas></div>
+                <div class="chart-card glass-card animate-in" style="--delay:0.25s"><h3 class="chart-title">By Payment Mode</h3><canvas id="paymentChart"></canvas></div>
+                <div class="insights-section animate-in" style="--delay:0.3s"><h3 class="chart-title">🧠 Smart Insights</h3><div class="insights-list" id="insightsList"></div></div>
+                <div class="stats-grid" id="statsGrid"></div>
+            </div>
+        </section>
+
+        <!-- BUDGET -->
+        <section class="page" id="page-budget">
+            <div class="scroll-content">
+                <div class="budget-hero glass-card animate-in">
+                    <div class="budget-hero-glow"></div>
+                    <div class="budget-total-label">Monthly Budget</div>
+                    <div class="budget-total-amount" id="budgetTotalAmount">₹0</div>
+                    <div class="budget-progress-bar"><div class="budget-progress-fill animated-bar" id="budgetProgressFill"></div></div>
+                    <div class="budget-progress-text" id="budgetProgressText">0% used</div>
+                    <div class="budget-days-left" id="budgetDaysLeft"></div>
+                </div>
+                <div class="savings-goal-card glass-card animate-in" style="--delay:0.1s">
+                    <div class="section-header"><h2 class="section-title">🎯 Savings Goal</h2><button class="link-btn shimmer-btn" id="btnEditGoal">Edit</button></div>
+                    <div class="goal-content" id="goalContent"><p class="goal-placeholder">Set a monthly savings target</p></div>
+                </div>
+                <div class="section animate-in" style="--delay:0.2s">
+                    <div class="section-header"><h2 class="section-title">Category Budgets</h2><button class="link-btn shimmer-btn" id="btnEditBudget">Edit</button></div>
+                    <div class="budget-list" id="budgetList"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ADD/EDIT MODAL -->
+        <div class="modal-overlay hidden" id="modalOverlay">
+            <div class="modal glass-modal">
+                <div class="modal-handle"></div>
+                <div class="modal-header"><button class="modal-close" id="btnModalClose">Cancel</button><h2 class="modal-title" id="modalTitle">Add Expense</h2><button class="modal-save" id="btnModalSave">Save</button></div>
+                <div class="modal-body">
+                    <div class="type-toggle"><button class="type-btn active" data-type="expense">Expense</button><button class="type-btn" data-type="income">Income</button></div>
+                    <div class="amount-input-group"><span class="currency-symbol" id="currencySymbol">₹</span><input type="number" id="inputAmount" class="amount-input" placeholder="0" step="0.01" inputmode="decimal"></div>
+                    <div class="form-group"><label class="form-label">Category</label><div class="category-grid" id="categoryGrid"></div></div>
+                    <div class="form-row"><div class="form-group flex-1"><label class="form-label">Date</label><input type="date" id="inputDate" class="form-input"></div><div class="form-group"><label class="form-label">Recurring</label><label class="toggle small-toggle"><input type="checkbox" id="inputRecurring"><span class="toggle-slider"></span></label></div></div>
+                    <div class="form-group"><label class="form-label">Description</label><input type="text" id="inputDesc" class="form-input" placeholder="What did you spend on?" maxlength="100"></div>
+                    <div class="form-group"><label class="form-label">Payment Mode</label><div class="payment-chips" id="paymentChips"></div></div>
+                    <div class="form-group" id="receiptGroup"><label class="form-label">Receipt</label><div class="receipt-area" id="receiptArea"><input type="file" id="receiptInput" accept="image/*" capture="environment" class="hidden"><div class="receipt-placeholder" id="receiptPlaceholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Tap to add receipt</span></div><img id="receiptPreview" class="receipt-preview hidden" alt="Receipt"><button class="receipt-remove hidden" id="receiptRemove">✕</button></div></div>
+                    <div class="form-group"><label class="form-label">Notes</label><textarea id="inputNotes" class="form-input form-textarea" placeholder="Optional notes..." maxlength="200"></textarea></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INCOME MODAL -->
+        <div class="modal-overlay hidden" id="incomeModalOverlay">
+            <div class="modal glass-modal">
+                <div class="modal-handle"></div>
+                <div class="modal-header"><button class="modal-close" id="btnIncomeClose">Cancel</button><h2 class="modal-title">Add Income</h2><button class="modal-save" id="btnIncomeSave">Save</button></div>
+                <div class="modal-body">
+                    <div class="amount-input-group income-amount"><span class="currency-symbol">₹</span><input type="number" id="incomeAmount" class="amount-input" placeholder="0" step="0.01" inputmode="decimal"></div>
+                    <div class="form-group"><label class="form-label">Source</label><div class="payment-chips" id="incomeSourceChips"></div></div>
+                    <div class="form-group"><label class="form-label">Date</label><input type="date" id="incomeDate" class="form-input"></div>
+                    <div class="form-group"><label class="form-label">Description</label><input type="text" id="incomeDesc" class="form-input" placeholder="e.g. Salary, Freelance..." maxlength="100"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BUDGET EDIT MODAL -->
+        <div class="modal-overlay hidden" id="budgetModalOverlay"><div class="modal glass-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnBudgetClose">Cancel</button><h2 class="modal-title">Set Budgets</h2><button class="modal-save" id="btnBudgetSave">Save</button></div><div class="modal-body"><div id="budgetInputs"></div></div></div></div>
+
+        <!-- GOAL MODAL -->
+        <div class="modal-overlay hidden" id="goalModalOverlay"><div class="modal glass-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnGoalClose">Cancel</button><h2 class="modal-title">Savings Goal</h2><button class="modal-save" id="btnGoalSave">Save</button></div><div class="modal-body"><div class="amount-input-group"><span class="currency-symbol">₹</span><input type="number" id="goalAmount" class="amount-input" placeholder="0" inputmode="decimal"></div><p class="form-hint">Monthly savings target (Income − Expenses)</p></div></div></div>
+
+        <!-- RECURRING MODAL -->
+        <div class="modal-overlay hidden" id="recurringModalOverlay"><div class="modal glass-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnRecurringClose">Done</button><h2 class="modal-title">Recurring Expenses</h2><div></div></div><div class="modal-body"><div id="recurringManageList"></div><p class="empty-hint" id="recurringEmpty">Toggle "Recurring" when adding an expense to auto-log monthly.</p></div></div></div>
+
+        <!-- INSIGHTS MODAL -->
+        <div class="modal-overlay hidden" id="insightsModalOverlay"><div class="modal glass-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnInsightsClose">Done</button><h2 class="modal-title">🧠 Insights</h2><div></div></div><div class="modal-body"><div id="allInsightsList"></div></div></div></div>
+
+        <!-- SETTINGS MODAL -->
+        <div class="modal-overlay hidden" id="settingsOverlay">
+            <div class="modal glass-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnSettingsClose">Done</button><h2 class="modal-title">Settings</h2><div></div></div>
+                <div class="modal-body">
+                    <div class="settings-group"><div class="settings-item"><span>Currency</span><select id="settingCurrency" class="settings-select"><option value="₹">₹ INR</option><option value="$">$ USD</option><option value="€">€ EUR</option><option value="£">£ GBP</option><option value="¥">¥ JPY</option></select></div><div class="settings-item"><span>Dark Mode</span><label class="toggle"><input type="checkbox" id="settingDark" checked><span class="toggle-slider"></span></label></div></div>
+                    <div class="settings-group"><button class="settings-btn glass-card" id="btnExportAll">📤 Export All (CSV)</button><button class="settings-btn glass-card" id="btnImport">📥 Import CSV</button><input type="file" id="fileImport" accept=".csv" class="hidden"><button class="settings-btn glass-card danger" id="btnClearAll">🗑️ Clear All Data</button></div>
+                    <div class="settings-group"><p class="settings-info">v3.0 Pro — All data stored locally on device.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DETAIL MODAL -->
+        <div class="modal-overlay hidden" id="detailOverlay"><div class="modal glass-modal detail-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnDetailClose">Close</button><h2 class="modal-title">Detail</h2><div></div></div><div class="modal-body" id="detailBody"></div><div class="detail-actions"><button class="action-btn edit glow-btn" id="btnEditExpense">✏️ Edit</button><button class="action-btn delete" id="btnDeleteExpense">🗑️ Delete</button></div></div></div>
+
+        <div class="toast hidden" id="toast"></div>
+        <canvas id="confetti" class="confetti-canvas hidden"></canvas>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
