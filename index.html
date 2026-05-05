@@ -1,254 +1,689 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Expenses">
-    <meta name="theme-color" content="#0a0a1a">
-    <title>Expense Tracker Pro</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="chart.js"></script>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JDAP Orchestrator Tool</title>
+<style>
+  :root {
+    --bg-dark: #1a1a2e;
+    --bg-panel: #16213e;
+    --bg-card: #0f3460;
+    --bg-console: #0d1117;
+    --accent: #00b4d8;
+    --accent-light: #48cae4;
+    --success: #2ecc71;
+    --warn: #f39c12;
+    --error: #e74c3c;
+    --text: #e0e0e0;
+    --text-muted: #8892a4;
+    --border: #2a3a5c;
+    --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-dark);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--accent);
+    flex-shrink: 0;
+  }
+  .header h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .header h1 span { color: var(--accent); }
+  .header-status {
+    display: flex; align-items: center; gap: 16px; font-size: 13px;
+  }
+  .status-badge {
+    padding: 4px 14px; border-radius: 12px; font-weight: 600; font-size: 12px; text-transform: uppercase;
+  }
+  .status-idle { background: var(--border); color: var(--text-muted); }
+  .status-running { background: rgba(0,180,216,0.2); color: var(--accent); animation: pulse 1.5s infinite; }
+  .status-paused { background: rgba(243,156,18,0.2); color: var(--warn); animation: pulse 1s infinite; }
+  .status-completed { background: rgba(46,204,113,0.2); color: var(--success); }
+  .status-stopped { background: rgba(243,156,18,0.2); color: var(--warn); }
+  .status-error { background: rgba(231,76,60,0.2); color: var(--error); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+  .btn {
+    padding: 6px 20px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-light); transform: translateY(-1px); }
+  .btn-primary:disabled { background: var(--border); cursor: not-allowed; transform: none; }
+  .btn-danger { background: var(--error); color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+
+  /* Main Layout */
+  .main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* Left Panel — Steps */
+  .left-panel {
+    width: 50%;
+    overflow-y: auto;
+    padding: 16px;
+    border-right: 1px solid var(--border);
+  }
+  .left-panel::-webkit-scrollbar { width: 6px; }
+  .left-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Agent Accordion */
+  .agent-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .agent-card.active { border-color: var(--accent); }
+  .agent-card.completed { border-color: var(--success); }
+  .agent-card.error { border-color: var(--error); }
+
+  .agent-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  .agent-header:hover { background: rgba(255,255,255,0.03); }
+  .agent-icon { font-size: 22px; }
+  .agent-info { flex: 1; }
+  .agent-name { font-weight: 600; font-size: 15px; }
+  .agent-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .agent-badge {
+    font-size: 11px; padding: 2px 10px; border-radius: 8px; font-weight: 600;
+  }
+  .agent-badge.pending { background: var(--border); color: var(--text-muted); }
+  .agent-badge.running { background: rgba(0,180,216,0.15); color: var(--accent); }
+  .agent-badge.completed { background: rgba(46,204,113,0.15); color: var(--success); }
+
+  .agent-steps {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+    background: rgba(0,0,0,0.15);
+  }
+  .agent-card.expanded .agent-steps {
+    max-height: 2000px;
+  }
+
+  .step-item {
+    padding: 8px 16px 8px 44px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    position: relative;
+  }
+  .step-icon {
+    width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 10px; flex-shrink: 0;
+  }
+  .step-icon.pending { background: var(--border); color: var(--text-muted); }
+  .step-icon.running { background: var(--accent); color: #fff; animation: pulse 1s infinite; }
+  .step-icon.waiting_input { background: var(--warn); color: #fff; animation: pulse 0.8s infinite; }
+  .step-icon.completed { background: var(--success); color: #fff; }
+  .step-icon.error { background: var(--error); color: #fff; }
+  .step-name { flex: 1; }
+  .step-type {
+    font-size: 10px; padding: 1px 8px; border-radius: 6px;
+    background: rgba(255,255,255,0.06); color: var(--text-muted);
+  }
+
+  /* Input Form */
+  .input-form {
+    background: linear-gradient(135deg, rgba(0,180,216,0.08), rgba(15,52,96,0.5));
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 16px 0;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  .input-form h3 {
+    font-size: 15px; color: var(--accent); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .form-group { margin-bottom: 14px; }
+  .form-label {
+    display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;
+  }
+  .form-question { font-size: 13px; margin-bottom: 8px; }
+  .form-select, .form-input {
+    width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-size: 13px; font-family: var(--font-sans);
+  }
+  .form-select:focus, .form-input:focus { border-color: var(--accent); outline: none; }
+
+  .option-grid {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .option-btn {
+    padding: 6px 16px; border: 1px solid var(--border); border-radius: 6px;
+    background: rgba(0,0,0,0.2); color: var(--text); cursor: pointer; font-size: 13px;
+    transition: all 0.2s;
+  }
+  .option-btn:hover { border-color: var(--accent); background: rgba(0,180,216,0.1); }
+  .option-btn.selected { border-color: var(--accent); background: rgba(0,180,216,0.2); color: var(--accent); font-weight: 600; }
+  .option-btn.recommended { border-color: var(--success); }
+
+  .checkbox-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .checkbox-label {
+    display: flex; align-items: center; gap: 6px; padding: 4px 12px; border: 1px solid var(--border);
+    border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s;
+    background: rgba(0,0,0,0.2);
+  }
+  .checkbox-label:hover { border-color: var(--accent); }
+  .checkbox-label input:checked + span { color: var(--accent); font-weight: 600; }
+
+  .submit-row { display: flex; justify-content: flex-end; margin-top: 16px; }
+
+  /* Right Panel — Console */
+  .right-panel {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-console);
+  }
+  .console-header {
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; font-weight: 600; flex-shrink: 0;
+  }
+  .console-header span { color: var(--accent); }
+  .console-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .console-body::-webkit-scrollbar { width: 6px; }
+  .console-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .log-line { display: flex; gap: 8px; }
+  .log-ts { color: var(--text-muted); flex-shrink: 0; min-width: 85px; }
+  .log-msg { word-break: break-word; }
+  .log-info .log-msg { color: var(--text); }
+  .log-success .log-msg { color: var(--success); }
+  .log-warn .log-msg { color: var(--warn); }
+  .log-error .log-msg { color: var(--error); }
+
+  /* Progress Bar */
+  .progress-container {
+    height: 3px; background: var(--border); flex-shrink: 0;
+  }
+  .progress-bar {
+    height: 100%; background: linear-gradient(90deg, var(--accent), var(--success));
+    transition: width 0.5s ease; width: 0%;
+  }
+
+  /* Welcome Screen */
+  .welcome {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; text-align: center; padding: 40px;
+  }
+  .welcome h2 { font-size: 24px; margin-bottom: 12px; color: var(--accent); }
+  .welcome p { color: var(--text-muted); max-width: 500px; margin-bottom: 24px; font-size: 14px; line-height: 1.6; }
+  .welcome .agent-list { text-align: left; margin-bottom: 24px; }
+  .welcome .agent-list div {
+    padding: 6px 0; font-size: 14px; display: flex; align-items: center; gap: 10px;
+  }
+
+  /* Responsive */
+  @media (max-width: 1000px) {
+    .main { flex-direction: column; }
+    .left-panel, .right-panel { width: 100%; height: 50%; }
+    .left-panel { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
 </head>
 <body>
-    <!-- ─── Animated Background ─── -->
-    <div class="bg-orbs">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
+
+<!-- Header -->
+<div class="header">
+  <h1>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="var(--accent)"/>
+    </svg>
+    <span>JDAP</span> Orchestrator Tool
+  </h1>
+  <div class="header-status">
+    <span id="statusBadge" class="status-badge status-idle">IDLE</span>
+    <select id="agentSelect" style="padding:6px 10px;border-radius:6px;background:var(--surface);color:var(--text);border:1px solid var(--border);font-size:12px;cursor:pointer">
+      <option value="all">▶ Run All Agents</option>
+      <option value="integrator">🔧 JDAP Integrator</option>
+      <option value="patcher">🩹 JDAP Patcher</option>
+      <option value="config">⚙️ JDAP Config</option>
+      <option value="can_spreadsheet">📊 CAN Spreadsheet</option>
+    </select>
+    <button id="btnStart" class="btn btn-primary" onclick="startFromDropdown()">▶ Go</button>
+    <button id="btnStop" class="btn btn-danger" onclick="stopOrchestrator()" style="display:none">⏹ Stop</button>
+    <button id="btnReset" class="btn btn-danger" onclick="resetOrchestrator()" style="display:none">↺ Reset</button>
+  </div>
+</div>
+
+<!-- Progress -->
+<div class="progress-container">
+  <div id="progressBar" class="progress-bar"></div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <!-- Left Panel -->
+  <div class="left-panel" id="leftPanel">
+    <div id="welcomeScreen" class="welcome">
+      <h2>JDAP Integration Orchestrator</h2>
+      <p>This tool executes JDAP agents to integrate JDAP security into your EMB32 project. Run all agents sequentially or pick individual agents to run.</p>
+      <div class="agent-list">
+        <div>🔧 <strong>Agent 1:</strong> JDAP Integrator — library integration, vcxproj, include paths</div>
+        <div>🩹 <strong>Agent 2:</strong> JDAP Patcher — CAN driver security patches</div>
+        <div>⚙️ <strong>Agent 3:</strong> JDAP Config — server/client configuration</div>
+        <div>📊 <strong>Agent 4:</strong> CAN Spreadsheet — COM_GENERATOR settings</div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+        <button class="btn btn-primary" onclick="startOrchestrator()" style="font-size:15px;padding:10px 24px">
+          ▶ Run All Agents
+        </button>
+        <button class="btn btn-primary" onclick="showAgentPicker()" style="font-size:15px;padding:10px 24px;background:#0f3460;border:1px solid var(--accent)">
+          🎯 Pick Agent(s)
+        </button>
+      </div>
+      <div id="agentPicker" style="display:none;margin-top:20px;text-align:left;width:100%;max-width:400px">
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px">Select agents to run:</div>
+        <label class="checkbox-label" style="margin-bottom:8px;display:flex">
+          <input type="checkbox" value="integrator" class="agent-pick-cb"> <span>🔧 JDAP Integrator</span>
+        </label>
+        <label class="checkbox-label" style="margin-bottom:8px;display:flex">
+          <input type="checkbox" value="patcher" class="agent-pick-cb"> <span>🩹 JDAP Patcher</span>
+        </label>
+        <label class="checkbox-label" style="margin-bottom:8px;display:flex">
+          <input type="checkbox" value="config" class="agent-pick-cb"> <span>⚙️ JDAP Config</span>
+        </label>
+        <label class="checkbox-label" style="margin-bottom:8px;display:flex">
+          <input type="checkbox" value="can_spreadsheet" class="agent-pick-cb"> <span>📊 CAN Spreadsheet</span>
+        </label>
+        <button class="btn btn-primary" onclick="startSelectedAgents()" style="margin-top:12px;width:100%">▶ Run Selected</button>
+      </div>
     </div>
+    <div id="agentsContainer" style="display:none"></div>
+    <div id="inputFormContainer"></div>
+  </div>
 
-    <!-- ─── Splash Screen ─── -->
-    <div id="splash" class="splash">
-        <div class="splash-content">
-            <div class="splash-logo">
-                <div class="splash-ring"></div>
-                <span class="splash-icon">💰</span>
-            </div>
-            <div class="splash-title">Expense Tracker</div>
-            <div class="splash-sub">Track smarter. Spend wiser.</div>
-            <div class="splash-dots"><span></span><span></span><span></span></div>
-        </div>
-        <div class="splash-particles" id="splashParticles"></div>
+  <!-- Right Panel — Console -->
+  <div class="right-panel">
+    <div class="console-header">
+      <span>📟 Runtime Console</span>
+      <span id="logCount" style="color:var(--text-muted);font-weight:400">0 entries</span>
     </div>
-
-    <!-- ─── App ─── -->
-    <div id="app" class="app hidden">
-
-        <!-- Header -->
-        <header class="header glass-header">
-            <div class="header-left">
-                <h1 class="header-title">Expenses</h1>
-                <p class="header-date" id="headerDate"></p>
-            </div>
-            <div class="header-right">
-                <button class="icon-btn pulse-hover" id="btnNotifications">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-                    <span class="notif-badge hidden" id="notifBadge">!</span>
-                </button>
-                <button class="icon-btn pulse-hover" id="btnSettings">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-                </button>
-            </div>
-        </header>
-
-        <!-- Tabs -->
-        <nav class="tab-bar glass-tab">
-            <button class="tab active" data-tab="home"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span><div class="tab-indicator"></div></button>
-            <button class="tab" data-tab="calendar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span><div class="tab-indicator"></div></button>
-            <button class="tab add-btn" id="btnAdd"><div class="add-circle"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></button>
-            <button class="tab" data-tab="analytics"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Analytics</span><div class="tab-indicator"></div></button>
-            <button class="tab" data-tab="budget"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg><span>Budget</span><div class="tab-indicator"></div></button>
-        </nav>
-
-        <!-- HOME -->
-        <section class="page active" id="page-home">
-            <div class="scroll-content">
-                <!-- Hero Balance -->
-                <div class="hero-card animate-in">
-                    <div class="hero-glow"></div>
-                    <div class="hero-top">
-                        <div>
-                            <div class="hero-label">Net Balance</div>
-                            <div class="hero-amount" id="netBalance"><span class="counter" data-target="0">₹0</span></div>
-                            <div class="hero-month" id="heroMonth">April 2026</div>
-                        </div>
-                        <button class="income-btn glow-btn" id="btnAddIncome"><span class="btn-shine"></span>+ Income</button>
-                    </div>
-                    <div class="hero-divider"></div>
-                    <div class="hero-stats">
-                        <div class="hero-stat animate-in" style="--delay:0.1s">
-                            <div class="hero-stat-ring green-ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="var(--green)" stroke-width="3" stroke-dasharray="100" stroke-dashoffset="100" class="ring-progress" id="incomeRing"/></svg></div>
-                            <div><div class="hero-stat-label">Income</div><div class="hero-stat-value green-text" id="monthIncome">₹0</div></div>
-                        </div>
-                        <div class="hero-stat animate-in" style="--delay:0.2s">
-                            <div class="hero-stat-ring red-ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="var(--red)" stroke-width="3" stroke-dasharray="100" stroke-dashoffset="100" class="ring-progress" id="expenseRing"/></svg></div>
-                            <div><div class="hero-stat-label">Expenses</div><div class="hero-stat-value red-text" id="monthExpense">₹0</div></div>
-                        </div>
-                        <div class="hero-stat animate-in" style="--delay:0.3s">
-                            <div class="hero-stat-ring orange-ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="var(--orange)" stroke-width="3" stroke-dasharray="100" stroke-dashoffset="100" class="ring-progress" id="todayRing"/></svg></div>
-                            <div><div class="hero-stat-label">Today</div><div class="hero-stat-value" id="todayTotal">₹0</div></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Insight -->
-                <div class="insight-card glass-card animate-in" style="--delay:0.15s" id="insightCard">
-                    <div class="insight-glow"></div>
-                    <span class="insight-icon bounce-loop">💡</span>
-                    <span class="insight-text" id="insightText">Add expenses to get insights</span>
-                </div>
-
-                <!-- Streak -->
-                <div class="streak-card glass-card animate-in" style="--delay:0.2s">
-                    <div class="streak-flames" id="streakFlames"></div>
-                    <div class="streak-info"><span class="streak-fire wiggle-loop">🔥</span><span class="streak-text" id="streakText">0 day streak</span></div>
-                    <div class="streak-bar"><div class="streak-bar-fill" id="streakBarFill"></div></div>
-                    <div class="streak-sub" id="streakSub">Log daily to build your streak!</div>
-                </div>
-
-                <!-- Mini Stats -->
-                <div class="mini-stats">
-                    <div class="mini-stat-card glass-card animate-in" style="--delay:0.25s"><div class="mini-stat-icon">📅</div><div class="mini-stat-value" id="weekTotal">₹0</div><div class="mini-stat-label">This Week</div></div>
-                    <div class="mini-stat-card glass-card animate-in" style="--delay:0.3s"><div class="mini-stat-icon">📊</div><div class="mini-stat-value" id="dailyAvg">₹0</div><div class="mini-stat-label">Daily Avg</div></div>
-                    <div class="mini-stat-card glass-card animate-in" style="--delay:0.35s"><div class="mini-stat-icon">🔢</div><div class="mini-stat-value" id="txCount">0</div><div class="mini-stat-label">Entries</div></div>
-                </div>
-
-                <!-- Recurring -->
-                <div class="section animate-in" style="--delay:0.4s" id="recurringSection">
-                    <div class="section-header"><h2 class="section-title">📌 Recurring</h2><button class="link-btn shimmer-btn" id="btnManageRecurring">Manage</button></div>
-                    <div class="recurring-list" id="recurringList"></div>
-                </div>
-
-                <!-- Top Categories -->
-                <div class="section animate-in" style="--delay:0.45s"><h2 class="section-title">Top Categories</h2><div class="category-chips" id="topCategories"></div></div>
-
-                <!-- Recent -->
-                <div class="section animate-in" style="--delay:0.5s">
-                    <div class="section-header"><h2 class="section-title">Recent Expenses</h2><button class="link-btn shimmer-btn" data-tab="calendar">See All</button></div>
-                    <div class="transaction-list" id="recentList"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- CALENDAR -->
-        <section class="page" id="page-calendar">
-            <div class="scroll-content">
-                <div class="calendar-nav animate-in"><button class="cal-nav-btn glass-card" id="calPrev">‹</button><h2 class="cal-month-title" id="calMonthTitle">April 2026</h2><button class="cal-nav-btn glass-card" id="calNext">›</button></div>
-                <div class="calendar-heatmap glass-card animate-in" style="--delay:0.1s" id="calendarGrid"></div>
-                <div class="cal-legend"><span class="cal-legend-item"><span class="cal-box" style="background:var(--bg-elevated)"></span>₹0</span><span class="cal-legend-item"><span class="cal-box heat-low"></span>Low</span><span class="cal-legend-item"><span class="cal-box heat-mid"></span>Mid</span><span class="cal-legend-item"><span class="cal-box heat-high"></span>High</span></div>
-                <div class="section animate-in" style="--delay:0.2s"><h2 class="section-title" id="calDayTitle">Today</h2><div class="transaction-list" id="calDayList"></div><div class="empty-state hidden" id="calEmpty"><div class="empty-icon float-loop">📅</div><p>No expenses on this day</p></div></div>
-                <div class="section animate-in" style="--delay:0.3s">
-                    <div class="search-bar glass-card"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="searchInput" placeholder="Search expenses..."></div>
-                    <div class="filter-row"><select id="filterCategory" class="filter-select glass-card"><option value="">All Categories</option></select><select id="filterPayment" class="filter-select glass-card"><option value="">All Payments</option></select><button class="filter-btn glow-btn" id="btnExport">CSV</button></div>
-                    <div class="transaction-list" id="historyList"></div>
-                    <div class="empty-state hidden" id="emptyHistory"><div class="empty-icon float-loop">📭</div><p>No expenses found</p></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ANALYTICS -->
-        <section class="page" id="page-analytics">
-            <div class="scroll-content">
-                <div class="analytics-period glass-card animate-in"><button class="period-btn active" data-period="week">Week</button><button class="period-btn" data-period="month">Month</button><button class="period-btn" data-period="year">Year</button></div>
-                <div class="chart-card glass-card animate-in" style="--delay:0.1s"><h3 class="chart-title">Income vs Expenses</h3><canvas id="incomeExpenseChart"></canvas></div>
-                <div class="chart-card glass-card animate-in" style="--delay:0.15s"><h3 class="chart-title">Spending Trend</h3><canvas id="trendChart"></canvas></div>
-                <div class="chart-card glass-card animate-in" style="--delay:0.2s"><h3 class="chart-title">By Category</h3><canvas id="categoryChart"></canvas></div>
-                <div class="chart-card glass-card animate-in" style="--delay:0.25s"><h3 class="chart-title">By Payment Mode</h3><canvas id="paymentChart"></canvas></div>
-                <div class="insights-section animate-in" style="--delay:0.3s"><h3 class="chart-title">🧠 Smart Insights</h3><div class="insights-list" id="insightsList"></div></div>
-                <div class="stats-grid" id="statsGrid"></div>
-            </div>
-        </section>
-
-        <!-- BUDGET -->
-        <section class="page" id="page-budget">
-            <div class="scroll-content">
-                <div class="budget-hero glass-card animate-in">
-                    <div class="budget-hero-glow"></div>
-                    <div class="budget-total-label">Monthly Budget</div>
-                    <div class="budget-total-amount" id="budgetTotalAmount">₹0</div>
-                    <div class="budget-progress-bar"><div class="budget-progress-fill animated-bar" id="budgetProgressFill"></div></div>
-                    <div class="budget-progress-text" id="budgetProgressText">0% used</div>
-                    <div class="budget-days-left" id="budgetDaysLeft"></div>
-                </div>
-                <div class="savings-goal-card glass-card animate-in" style="--delay:0.1s">
-                    <div class="section-header"><h2 class="section-title">🎯 Savings Goal</h2><button class="link-btn shimmer-btn" id="btnEditGoal">Edit</button></div>
-                    <div class="goal-content" id="goalContent"><p class="goal-placeholder">Set a monthly savings target</p></div>
-                </div>
-                <div class="section animate-in" style="--delay:0.2s">
-                    <div class="section-header"><h2 class="section-title">Category Budgets</h2><button class="link-btn shimmer-btn" id="btnEditBudget">Edit</button></div>
-                    <div class="budget-list" id="budgetList"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ADD/EDIT MODAL -->
-        <div class="modal-overlay hidden" id="modalOverlay">
-            <div class="modal glass-modal">
-                <div class="modal-handle"></div>
-                <div class="modal-header"><button class="modal-close" id="btnModalClose">Cancel</button><h2 class="modal-title" id="modalTitle">Add Expense</h2><button class="modal-save" id="btnModalSave">Save</button></div>
-                <div class="modal-body">
-                    <div class="type-toggle"><button class="type-btn active" data-type="expense">Expense</button><button class="type-btn" data-type="income">Income</button></div>
-                    <div class="amount-input-group"><span class="currency-symbol" id="currencySymbol">₹</span><input type="number" id="inputAmount" class="amount-input" placeholder="0" step="0.01" inputmode="decimal"></div>
-                    <div class="form-group"><label class="form-label">Category</label><div class="category-grid" id="categoryGrid"></div></div>
-                    <div class="form-row"><div class="form-group flex-1"><label class="form-label">Date</label><input type="date" id="inputDate" class="form-input"></div><div class="form-group"><label class="form-label">Recurring</label><label class="toggle small-toggle"><input type="checkbox" id="inputRecurring"><span class="toggle-slider"></span></label></div></div>
-                    <div class="form-group"><label class="form-label">Description</label><input type="text" id="inputDesc" class="form-input" placeholder="What did you spend on?" maxlength="100"></div>
-                    <div class="form-group"><label class="form-label">Payment Mode</label><div class="payment-chips" id="paymentChips"></div></div>
-                    <div class="form-group" id="receiptGroup"><label class="form-label">Receipt</label><div class="receipt-area" id="receiptArea"><input type="file" id="receiptInput" accept="image/*" capture="environment" class="hidden"><div class="receipt-placeholder" id="receiptPlaceholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Tap to add receipt</span></div><img id="receiptPreview" class="receipt-preview hidden" alt="Receipt"><button class="receipt-remove hidden" id="receiptRemove">✕</button></div></div>
-                    <div class="form-group"><label class="form-label">Notes</label><textarea id="inputNotes" class="form-input form-textarea" placeholder="Optional notes..." maxlength="200"></textarea></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- INCOME MODAL -->
-        <div class="modal-overlay hidden" id="incomeModalOverlay">
-            <div class="modal glass-modal">
-                <div class="modal-handle"></div>
-                <div class="modal-header"><button class="modal-close" id="btnIncomeClose">Cancel</button><h2 class="modal-title">Add Income</h2><button class="modal-save" id="btnIncomeSave">Save</button></div>
-                <div class="modal-body">
-                    <div class="amount-input-group income-amount"><span class="currency-symbol">₹</span><input type="number" id="incomeAmount" class="amount-input" placeholder="0" step="0.01" inputmode="decimal"></div>
-                    <div class="form-group"><label class="form-label">Source</label><div class="payment-chips" id="incomeSourceChips"></div></div>
-                    <div class="form-group"><label class="form-label">Date</label><input type="date" id="incomeDate" class="form-input"></div>
-                    <div class="form-group"><label class="form-label">Description</label><input type="text" id="incomeDesc" class="form-input" placeholder="e.g. Salary, Freelance..." maxlength="100"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- BUDGET EDIT MODAL -->
-        <div class="modal-overlay hidden" id="budgetModalOverlay"><div class="modal glass-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnBudgetClose">Cancel</button><h2 class="modal-title">Set Budgets</h2><button class="modal-save" id="btnBudgetSave">Save</button></div><div class="modal-body"><div id="budgetInputs"></div></div></div></div>
-
-        <!-- GOAL MODAL -->
-        <div class="modal-overlay hidden" id="goalModalOverlay"><div class="modal glass-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnGoalClose">Cancel</button><h2 class="modal-title">Savings Goal</h2><button class="modal-save" id="btnGoalSave">Save</button></div><div class="modal-body"><div class="amount-input-group"><span class="currency-symbol">₹</span><input type="number" id="goalAmount" class="amount-input" placeholder="0" inputmode="decimal"></div><p class="form-hint">Monthly savings target (Income − Expenses)</p></div></div></div>
-
-        <!-- RECURRING MODAL -->
-        <div class="modal-overlay hidden" id="recurringModalOverlay"><div class="modal glass-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnRecurringClose">Done</button><h2 class="modal-title">Recurring Expenses</h2><div></div></div><div class="modal-body"><div id="recurringManageList"></div><p class="empty-hint" id="recurringEmpty">Toggle "Recurring" when adding an expense to auto-log monthly.</p></div></div></div>
-
-        <!-- INSIGHTS MODAL -->
-        <div class="modal-overlay hidden" id="insightsModalOverlay"><div class="modal glass-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnInsightsClose">Done</button><h2 class="modal-title">🧠 Insights</h2><div></div></div><div class="modal-body"><div id="allInsightsList"></div></div></div></div>
-
-        <!-- SETTINGS MODAL -->
-        <div class="modal-overlay hidden" id="settingsOverlay">
-            <div class="modal glass-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnSettingsClose">Done</button><h2 class="modal-title">Settings</h2><div></div></div>
-                <div class="modal-body">
-                    <div class="settings-group"><div class="settings-item"><span>Currency</span><select id="settingCurrency" class="settings-select"><option value="₹">₹ INR</option><option value="$">$ USD</option><option value="€">€ EUR</option><option value="£">£ GBP</option><option value="¥">¥ JPY</option></select></div><div class="settings-item"><span>Dark Mode</span><label class="toggle"><input type="checkbox" id="settingDark" checked><span class="toggle-slider"></span></label></div></div>
-                    <div class="settings-group"><button class="settings-btn glass-card" id="btnExportAll">📤 Export All (CSV)</button><button class="settings-btn glass-card" id="btnImport">📥 Import CSV</button><input type="file" id="fileImport" accept=".csv" class="hidden"><button class="settings-btn glass-card danger" id="btnClearAll">🗑️ Clear All Data</button></div>
-                    <div class="settings-group"><p class="settings-info">v3.0 Pro — All data stored locally on device.</p></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- DETAIL MODAL -->
-        <div class="modal-overlay hidden" id="detailOverlay"><div class="modal glass-modal detail-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnDetailClose">Close</button><h2 class="modal-title">Detail</h2><div></div></div><div class="modal-body" id="detailBody"></div><div class="detail-actions"><button class="action-btn edit glow-btn" id="btnEditExpense">✏️ Edit</button><button class="action-btn delete" id="btnDeleteExpense">🗑️ Delete</button></div></div></div>
-
-        <div class="toast hidden" id="toast"></div>
-        <canvas id="confetti" class="confetti-canvas hidden"></canvas>
+    <div class="console-body" id="consoleBody">
+      <div class="log-line log-info">
+        <span class="log-ts">--:--:--</span>
+        <span class="log-msg">Ready. Click "Start All Agents" to begin.</span>
+      </div>
     </div>
-    <script src="app.js"></script>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// State
+// ============================================================
+let logIndex = 0;
+let evtSource = null;
+let pollInterval = null;
+let currentFormData = {};
+let lastStatus = null;
+let expandedAgents = new Set(); // Track manually toggled agents
+
+// ============================================================
+// API Calls
+// ============================================================
+async function apiCall(endpoint, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const resp = await fetch(endpoint, opts);
+  return resp.json();
+}
+
+// ============================================================
+// Start / Stop / Reset
+// ============================================================
+function startFromDropdown() {
+  const sel = document.getElementById('agentSelect').value;
+  if (sel === 'all') {
+    startOrchestrator(null);
+  } else {
+    startOrchestrator([sel]);
+  }
+}
+
+async function startOrchestrator(agentIds = null) {
+  document.getElementById('welcomeScreen').style.display = 'none';
+  document.getElementById('agentsContainer').style.display = 'block';
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('agentSelect').disabled = true;
+  document.getElementById('btnStop').style.display = 'inline-block';
+  document.getElementById('btnReset').style.display = 'none';
+  expandedAgents.clear();
+  logIndex = 0;
+  document.getElementById('consoleBody').innerHTML = '';
+  const body = agentIds ? { agents: agentIds } : {};
+  await apiCall('/api/start', 'POST', body);
+  startPolling();
+  connectSSE();
+}
+
+function showAgentPicker() {
+  const picker = document.getElementById('agentPicker');
+  picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+}
+
+async function startSelectedAgents() {
+  const cbs = document.querySelectorAll('.agent-pick-cb:checked');
+  const ids = Array.from(cbs).map(cb => cb.value);
+  if (ids.length === 0) { alert('Select at least one agent'); return; }
+  await startOrchestrator(ids);
+}
+
+async function stopOrchestrator() {
+  if (!confirm('Stop the currently running agent?')) return;
+  await apiCall('/api/stop', 'POST');
+  document.getElementById('btnStop').style.display = 'none';
+  document.getElementById('btnReset').style.display = 'inline-block';
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('agentSelect').disabled = false;
+}
+
+async function resetOrchestrator() {
+  if (!confirm('Reset orchestrator? This will clear all state.')) return;
+  await apiCall('/api/reset', 'POST');
+  document.getElementById('consoleBody').innerHTML = '';
+  document.getElementById('agentsContainer').style.display = 'none';
+  document.getElementById('welcomeScreen').style.display = 'flex';
+  document.getElementById('inputFormContainer').innerHTML = '';
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnStop').style.display = 'none';
+  document.getElementById('btnReset').style.display = 'none';
+  document.getElementById('agentSelect').disabled = false;
+  expandedAgents.clear();
+  logIndex = 0;
+  updateStatusBadge('idle');
+  updateProgress(0);
+  if (evtSource) { evtSource.close(); evtSource = null; }
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+}
+
+// ============================================================
+// SSE Log Stream
+// ============================================================
+function connectSSE() {
+  if (evtSource) evtSource.close();
+  evtSource = new EventSource('/api/stream');
+  evtSource.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'logs' && data.logs) {
+      appendLogs(data.logs);
+    }
+    if (data.type === 'status') {
+      updateStatusBadge(data.status);
+    }
+  };
+  evtSource.onerror = () => {
+    // Reconnect after a delay
+    setTimeout(connectSSE, 2000);
+  };
+}
+
+// ============================================================
+// Polling for Status
+// ============================================================
+function startPolling() {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(fetchStatus, 800);
+}
+
+async function fetchStatus() {
+  try {
+    const data = await apiCall('/api/status');
+    renderAgents(data.agents);
+    updateStatusBadge(data.status);
+    updateProgress(data.agents);
+
+    if (data.status === 'paused' && data.pendingQuestions) {
+      renderInputForm(data.pendingQuestions);
+    }
+    if (data.status === 'completed' || data.status === 'error' || data.status === 'stopped') {
+      document.getElementById('btnReset').style.display = 'inline-block';
+      document.getElementById('btnStop').style.display = 'none';
+      document.getElementById('btnStart').disabled = false;
+      document.getElementById('agentSelect').disabled = false;
+    }
+    lastStatus = data;
+  } catch (e) { /* retry next interval */ }
+}
+
+// ============================================================
+// Render Agents
+// ============================================================
+function toggleAgent(agentId) {
+  if (expandedAgents.has(agentId)) {
+    expandedAgents.delete(agentId);
+  } else {
+    expandedAgents.add(agentId);
+  }
+  // Re-render with updated expand state
+  if (lastStatus && lastStatus.agents) {
+    renderAgents(lastStatus.agents, true);
+  }
+}
+
+function renderAgents(agents, fromToggle = false) {
+  const container = document.getElementById('agentsContainer');
+  if (!agents || agents.length === 0) return;
+
+  // Auto-expand the currently running agent
+  agents.forEach(agent => {
+    if (agent.status === 'running') {
+      expandedAgents.add(agent.id);
+    }
+  });
+
+  let html = '';
+  agents.forEach((agent, ai) => {
+    const isActive = agent.status === 'running';
+    const isCompleted = agent.status === 'completed';
+    const isExpanded = expandedAgents.has(agent.id);
+
+    html += `<div class="agent-card ${isExpanded ? 'expanded' : ''} ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
+      <div class="agent-header" onclick="toggleAgent('${agent.id}')">
+        <span class="agent-icon">${agent.icon}</span>
+        <div class="agent-info">
+          <div class="agent-name">Agent ${ai + 1}: ${agent.name}</div>
+          <div class="agent-desc">${agent.description}</div>
+        </div>
+        <span class="agent-badge ${agent.status}">${agent.status}</span>
+      </div>
+      <div class="agent-steps">`;
+
+    agent.steps.forEach(step => {
+      const iconMap = {
+        pending: '○', running: '●', waiting_input: '?', completed: '✓', error: '✗', stopped: '⊘'
+      };
+      html += `<div class="step-item">
+        <div class="step-icon ${step.status}">${iconMap[step.status] || '○'}</div>
+        <span class="step-name">${step.name}</span>
+        <span class="step-type">${step.type === 'auto' ? '🔄 Auto' : '👤 Input'}</span>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+// ============================================================
+// Render Input Form
+// ============================================================
+function renderInputForm(questions) {
+  const container = document.getElementById('inputFormContainer');
+  if (!questions || container.dataset.rendered === JSON.stringify(questions)) return;
+  container.dataset.rendered = JSON.stringify(questions);
+  currentFormData = {};
+
+  let html = `<div class="input-form">
+    <h3>👤 User Input Required</h3>`;
+
+  questions.forEach(q => {
+    html += `<div class="form-group">
+      <label class="form-label">${q.label || q.id}</label>
+      <div class="form-question">${q.question}</div>`;
+
+    if (q.type === 'select' && q.options) {
+      // Auto-select the recommended (current) option
+      const recOpt = q.options.find(o => o.recommended);
+      if (recOpt) currentFormData[q.id] = recOpt.value;
+      html += `<div class="option-grid" data-qid="${q.id}">`;
+      q.options.forEach(opt => {
+        const isSelected = recOpt && opt.value === recOpt.value;
+        const cls = (isSelected ? ' selected' : '') + (opt.recommended ? ' recommended' : '');
+        html += `<button class="option-btn${cls}" data-qid="${q.id}" data-value="${opt.value}" 
+                  onclick="selectOption(this, '${q.id}', '${opt.value}')">${opt.label}${opt.recommended ? ' ★' : ''}</button>`;
+      });
+      html += `</div>`;
+    } else if (q.type === 'multiselect' && q.options) {
+      // Pre-populate with checked options
+      const preChecked = q.options.filter(o => o.checked).map(o => o.value);
+      if (preChecked.length > 0) currentFormData[q.id] = preChecked;
+      html += `<div class="checkbox-grid" data-qid="${q.id}">`;
+      q.options.forEach(opt => {
+        const chk = opt.checked ? ' checked' : '';
+        html += `<label class="checkbox-label">
+          <input type="checkbox" value="${opt.value}"${chk} onchange="updateMultiSelect('${q.id}')">
+          <span>${opt.label}${opt.checked ? ' (current)' : ''}</span>
+        </label>`;
+      });
+      html += `</div>`;
+    } else {
+      html += `<input class="form-input" type="text" placeholder="${q.placeholder || ''}" 
+                data-qid="${q.id}" onchange="currentFormData['${q.id}'] = this.value">`;
+    }
+
+    html += `</div>`;
+  });
+
+  html += `<div class="submit-row">
+    <button class="btn btn-primary" onclick="submitInput()" id="submitBtn">Submit →</button>
+  </div></div>`;
+
+  container.innerHTML = html;
+  // Scroll to form
+  container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function selectOption(btn, qid, value) {
+  // Deselect siblings
+  btn.parentElement.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  currentFormData[qid] = value;
+}
+
+function updateMultiSelect(qid) {
+  const checkboxes = document.querySelectorAll(`[data-qid="${qid}"] input:checked`);
+  currentFormData[qid] = Array.from(checkboxes).map(cb => cb.value);
+}
+
+async function submitInput() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  await apiCall('/api/input', 'POST', currentFormData);
+  document.getElementById('inputFormContainer').innerHTML = '';
+  document.getElementById('inputFormContainer').dataset.rendered = '';
+  currentFormData = {};
+}
+
+// ============================================================
+// Console Logs
+// ============================================================
+function appendLogs(logs) {
+  const consoleBody = document.getElementById('consoleBody');
+  const wasAtBottom = consoleBody.scrollHeight - consoleBody.scrollTop - consoleBody.clientHeight < 50;
+
+  logs.forEach(entry => {
+    const div = document.createElement('div');
+    div.className = `log-line log-${entry.level || 'info'}`;
+    div.innerHTML = `<span class="log-ts">${entry.ts || ''}</span><span class="log-msg">${escapeHtml(entry.msg || '')}</span>`;
+    consoleBody.appendChild(div);
+    logIndex++;
+  });
+
+  document.getElementById('logCount').textContent = `${logIndex} entries`;
+
+  if (wasAtBottom) {
+    consoleBody.scrollTop = consoleBody.scrollHeight;
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ============================================================
+// Status & Progress
+// ============================================================
+function updateStatusBadge(status) {
+  const badge = document.getElementById('statusBadge');
+  badge.className = `status-badge status-${status}`;
+  badge.textContent = status.toUpperCase();
+}
+
+function updateProgress(agents) {
+  if (!agents || !Array.isArray(agents)) return;
+  let total = 0, done = 0;
+  agents.forEach(a => {
+    a.steps.forEach(s => {
+      total++;
+      if (s.status === 'completed') done++;
+    });
+  });
+  const pct = total > 0 ? (done / total * 100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+
+// Shutdown server when browser tab/window is closed
+window.addEventListener('beforeunload', () => {
+  navigator.sendBeacon('/api/shutdown');
+});
+</script>
+
 </body>
 </html>
