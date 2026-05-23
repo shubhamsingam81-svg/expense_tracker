@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════
-   EXPENSE TRACKER PRO v3 — Premium Dark Theme
+   EXPENSE TRACKER PRO v4 — Premium Dark Theme
    ════════════════════════════════════════════ */
 
 :root {
@@ -670,7 +670,104 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .action-btn { flex: 1; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; text-align: center; transition: transform 0.2s; }
 .action-btn:active { transform: scale(0.95); }
 .action-btn.edit { background: linear-gradient(135deg, var(--accent), var(--purple)); color: white; box-shadow: 0 4px 12px var(--accent-glow); }
+.action-btn.duplicate { background: var(--bg-elevated); color: var(--blue); border: 1px solid rgba(85,136,255,0.2); }
 .action-btn.delete { background: var(--bg-elevated); color: var(--red); border: 1px solid rgba(255,68,119,0.2); }
+
+/* ─── Month Comparison Card ─── */
+.comparison-card { padding: 16px; margin: 12px 16px; }
+.comparison-grid { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.comp-col { flex: 1; text-align: center; }
+.comp-label { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+.comp-value { font-size: 20px; font-weight: 700; }
+.comp-arrow { font-size: 22px; color: var(--text-muted); }
+.comp-change { text-align: center; margin-top: 10px; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 20px; display: inline-block; width: 100%; }
+.comp-change.up { color: var(--red); background: var(--red-glow); }
+.comp-change.down { color: var(--green); background: var(--green-glow); }
+.comp-change.neutral { color: var(--text-dim); background: var(--bg-elevated); }
+
+/* ─── Quick Templates ─── */
+.templates-row { display: flex; gap: 10px; overflow-x: auto; padding: 4px 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.templates-row::-webkit-scrollbar { display: none; }
+.template-chip {
+    flex-shrink: 0; display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 12px; background: var(--bg-card);
+    border: 1px solid var(--glass-border); cursor: pointer;
+    transition: all 0.2s; white-space: nowrap; backdrop-filter: blur(10px);
+}
+.template-chip:active { transform: scale(0.95); border-color: var(--accent); }
+.template-chip .tpl-emoji { font-size: 18px; }
+.template-chip .tpl-info { display: flex; flex-direction: column; }
+.template-chip .tpl-name { font-size: 13px; font-weight: 600; }
+.template-chip .tpl-amount { font-size: 11px; color: var(--text-dim); }
+
+/* ─── Split Bill ─── */
+.split-people-row { display: flex; align-items: center; gap: 16px; justify-content: center; }
+.split-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--border); font-size: 22px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.split-btn:active { transform: scale(0.9); background: var(--accent-glow); }
+.split-count { font-size: 28px; font-weight: 800; min-width: 40px; text-align: center; }
+.tip-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.split-result { text-align: center; padding: 20px; margin-top: 12px; }
+.split-result-label { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; }
+.split-result-amount { font-size: 32px; font-weight: 800; color: var(--accent); }
+.split-result-detail { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+.split-save-btn { display: block; width: 100%; padding: 14px; text-align: center; font-size: 15px; font-weight: 600; margin-top: 16px; border-radius: 12px; color: white; background: linear-gradient(135deg, var(--accent), var(--purple)); box-shadow: 0 4px 12px var(--accent-glow); transition: transform 0.2s; }
+.split-save-btn:active { transform: scale(0.97); }
+
+/* ─── Tools Page ─── */
+.tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px; margin-bottom: 16px; }
+.tool-card { padding: 20px 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.tool-card:active { transform: scale(0.96); border-color: var(--accent); }
+.tool-icon { font-size: 32px; margin-bottom: 8px; }
+.tool-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.tool-desc { font-size: 11px; color: var(--text-dim); }
+
+
+
+/* ─── Report Section ─── */
+.report-section { margin: 0 16px 100px; padding: 20px; }
+.report-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.report-row .report-label { color: var(--text-dim); }
+.report-row .report-value { font-weight: 600; }
+.report-cat-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; }
+.report-cat-row .report-cat-name { color: var(--text); }
+.report-cat-row .report-cat-val { color: var(--text-dim); }
+
+/* ─── Report Download Buttons ─── */
+.report-download-row { display: flex; gap: 10px; margin-top: 16px; }
+.report-dl-btn { flex: 1; padding: 14px; text-align: center; font-size: 14px; font-weight: 600; border-radius: 12px; color: white; transition: transform 0.2s; }
+.report-dl-btn:active { transform: scale(0.97); }
+.report-dl-btn.pdf-btn { background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 4px 12px rgba(231,76,60,0.3); }
+.report-dl-btn.excel-btn { background: linear-gradient(135deg, #27ae60, #1e8449); box-shadow: 0 4px 12px rgba(39,174,96,0.3); }
+
+/* ─── Export Dropdown ─── */
+.export-dropdown { position: relative; }
+.export-menu {
+    position: absolute; top: 100%; right: 0; margin-top: 6px; z-index: 100;
+    background: var(--bg-elevated); backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg); overflow: hidden; min-width: 130px;
+    animation: modalIn 0.2s ease;
+}
+.export-menu.hidden { display: none; }
+.export-opt {
+    display: block; width: 100%; padding: 12px 16px; text-align: left;
+    font-size: 14px; font-weight: 500; color: var(--text);
+    transition: background 0.2s; border-bottom: 1px solid var(--border);
+}
+.export-opt:last-child { border-bottom: none; }
+.export-opt:hover, .export-opt:active { background: var(--bg-hover); }
+
+/* ─── Tags ─── */
+.tag-badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 8px; background: var(--accent-glow); color: var(--accent); margin-left: 4px; font-weight: 600; }
+
+/* ─── Template Manage Items ─── */
+.tpl-manage-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.tpl-manage-left { display: flex; align-items: center; gap: 10px; }
+.tpl-manage-emoji { font-size: 22px; }
+.tpl-manage-name { font-size: 14px; font-weight: 600; }
+.tpl-manage-amount { font-size: 12px; color: var(--text-dim); }
+.tpl-manage-delete { width: 28px; height: 28px; border-radius: 50%; background: var(--red-glow); color: var(--red); font-size: 14px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+.tpl-manage-delete:active { transform: scale(0.9); }
 
 /* ─── Recurring List ─── */
 .recurring-list { display: flex; flex-direction: column; gap: 8px; }
@@ -726,5 +823,85 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 /* ─── Reduced Motion ─── */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ─── Splash Version Badge ─── */
+.splash-version {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, var(--accent-glow), rgba(170,102,255,0.25));
+    color: var(--accent);
+    border: 1px solid rgba(85,136,255,0.2);
+}
+
+/* ─── Settings Section Title ─── */
+.settings-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin: 18px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+}
+.settings-section-title:first-child { margin-top: 0; }
+
+/* ─── Settings Button Icons ─── */
+.settings-btn-icon { margin-right: 8px; }
+.export-btn-pro {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.3s;
+}
+.export-btn-pro:hover {
+    box-shadow: 0 4px 16px rgba(85,136,255,0.2);
+}
+.export-btn-pro::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+/* ─── Report Download Buttons Enhanced ─── */
+.report-dl-btn {
+    position: relative;
+    overflow: hidden;
+}
+.report-dl-btn .dl-icon {
+    display: inline-block;
+    margin-right: 4px;
+    transition: transform 0.3s;
+}
+.report-dl-btn:hover .dl-icon {
+    transform: translateY(-2px) scale(1.1);
+}
+.report-dl-btn.pdf-btn {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    box-shadow: 0 4px 16px rgba(220,38,38,0.3);
+}
+.report-dl-btn.excel-btn {
+    background: linear-gradient(135deg, #059669, #065f46);
+    box-shadow: 0 4px 16px rgba(5,150,105,0.3);
+}
+.report-dl-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
+    animation: shimmer 2.5s ease-in-out infinite;
 }
 
