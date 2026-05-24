@@ -14,6 +14,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -33,6 +36,7 @@
             </div>
             <div class="splash-title">Expense Tracker</div>
             <div class="splash-sub">Track smarter. Spend wiser.</div>
+            <div class="splash-version">v4.0 Pro</div>
             <div class="splash-dots"><span></span><span></span><span></span></div>
         </div>
         <div class="splash-particles" id="splashParticles"></div>
@@ -65,6 +69,7 @@
             <button class="tab add-btn" id="btnAdd"><div class="add-circle"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></button>
             <button class="tab" data-tab="analytics"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Analytics</span><div class="tab-indicator"></div></button>
             <button class="tab" data-tab="budget"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg><span>Budget</span><div class="tab-indicator"></div></button>
+            <button class="tab" data-tab="tools"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg><span>Tools</span><div class="tab-indicator"></div></button>
         </nav>
 
         <!-- HOME -->
@@ -129,6 +134,29 @@
                 <!-- Top Categories -->
                 <div class="section animate-in" style="--delay:0.45s"><h2 class="section-title">Top Categories</h2><div class="category-chips" id="topCategories"></div></div>
 
+                <!-- Month Comparison -->
+                <div class="comparison-card glass-card animate-in" style="--delay:0.47s" id="comparisonCard">
+                    <h2 class="section-title">📊 vs Last Month</h2>
+                    <div class="comparison-grid">
+                        <div class="comp-col">
+                            <div class="comp-label">This Month</div>
+                            <div class="comp-value" id="compThisMonth">₹0</div>
+                        </div>
+                        <div class="comp-arrow" id="compArrow">→</div>
+                        <div class="comp-col">
+                            <div class="comp-label">Last Month</div>
+                            <div class="comp-value" id="compLastMonth">₹0</div>
+                        </div>
+                    </div>
+                    <div class="comp-change" id="compChange">No data yet</div>
+                </div>
+
+                <!-- Quick Templates -->
+                <div class="section animate-in" style="--delay:0.48s" id="templatesSection">
+                    <div class="section-header"><h2 class="section-title">⚡ Quick Add</h2><button class="link-btn shimmer-btn" id="btnManageTemplates">Manage</button></div>
+                    <div class="templates-row" id="templatesList"></div>
+                </div>
+
                 <!-- Recent -->
                 <div class="section animate-in" style="--delay:0.5s">
                     <div class="section-header"><h2 class="section-title">Recent Expenses</h2><button class="link-btn shimmer-btn" data-tab="calendar">See All</button></div>
@@ -146,7 +174,7 @@
                 <div class="section animate-in" style="--delay:0.2s"><h2 class="section-title" id="calDayTitle">Today</h2><div class="transaction-list" id="calDayList"></div><div class="empty-state hidden" id="calEmpty"><div class="empty-icon float-loop">📅</div><p>No expenses on this day</p></div></div>
                 <div class="section animate-in" style="--delay:0.3s">
                     <div class="search-bar glass-card"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="searchInput" placeholder="Search expenses..."></div>
-                    <div class="filter-row"><select id="filterCategory" class="filter-select glass-card"><option value="">All Categories</option></select><select id="filterPayment" class="filter-select glass-card"><option value="">All Payments</option></select><button class="filter-btn glow-btn" id="btnExport">CSV</button></div>
+                    <div class="filter-row"><select id="filterCategory" class="filter-select glass-card"><option value="">All Categories</option></select><select id="filterPayment" class="filter-select glass-card"><option value="">All Payments</option></select><select id="filterTag" class="filter-select glass-card"><option value="">All Tags</option></select><div class="export-dropdown"><button class="filter-btn glow-btn" id="btnExportToggle">Export ▾</button><div class="export-menu hidden" id="exportMenu"><button class="export-opt" id="btnExportPDF">📕 PDF</button><button class="export-opt" id="btnExportExcel">📗 Excel</button><button class="export-opt" id="btnExportCSV">📄 CSV</button></div></div></div>
                     <div class="transaction-list" id="historyList"></div>
                     <div class="empty-state hidden" id="emptyHistory"><div class="empty-icon float-loop">📭</div><p>No expenses found</p></div>
                 </div>
@@ -201,6 +229,7 @@
                     <div class="form-group"><label class="form-label">Description</label><input type="text" id="inputDesc" class="form-input" placeholder="What did you spend on?" maxlength="100"></div>
                     <div class="form-group"><label class="form-label">Payment Mode</label><div class="payment-chips" id="paymentChips"></div></div>
                     <div class="form-group" id="receiptGroup"><label class="form-label">Receipt</label><div class="receipt-area" id="receiptArea"><input type="file" id="receiptInput" accept="image/*" capture="environment" class="hidden"><div class="receipt-placeholder" id="receiptPlaceholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Tap to add receipt</span></div><img id="receiptPreview" class="receipt-preview hidden" alt="Receipt"><button class="receipt-remove hidden" id="receiptRemove">✕</button></div></div>
+                    <div class="form-group"><label class="form-label">Tags</label><input type="text" id="inputTags" class="form-input" placeholder="#food #lunch #office (space separated)" maxlength="100"></div>
                     <div class="form-group"><label class="form-label">Notes</label><textarea id="inputNotes" class="form-input form-textarea" placeholder="Optional notes..." maxlength="200"></textarea></div>
                 </div>
             </div>
@@ -237,14 +266,76 @@
             <div class="modal glass-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnSettingsClose">Done</button><h2 class="modal-title">Settings</h2><div></div></div>
                 <div class="modal-body">
                     <div class="settings-group"><div class="settings-item"><span>Currency</span><select id="settingCurrency" class="settings-select"><option value="₹">₹ INR</option><option value="$">$ USD</option><option value="€">€ EUR</option><option value="£">£ GBP</option><option value="¥">¥ JPY</option></select></div><div class="settings-item"><span>Dark Mode</span><label class="toggle"><input type="checkbox" id="settingDark" checked><span class="toggle-slider"></span></label></div></div>
-                    <div class="settings-group"><button class="settings-btn glass-card" id="btnExportAll">📤 Export All (CSV)</button><button class="settings-btn glass-card" id="btnImport">📥 Import CSV</button><input type="file" id="fileImport" accept=".csv" class="hidden"><button class="settings-btn glass-card danger" id="btnClearAll">🗑️ Clear All Data</button></div>
-                    <div class="settings-group"><p class="settings-info">v3.0 Pro — All data stored locally on device.</p></div>
+                    <div class="settings-group">
+                        <h4 class="settings-section-title">Export Data</h4>
+                        <button class="settings-btn glass-card export-btn-pro" id="btnExportAllPDF"><span class="settings-btn-icon">📕</span> Export All (PDF)</button>
+                        <button class="settings-btn glass-card export-btn-pro" id="btnExportAllExcel"><span class="settings-btn-icon">📗</span> Export All (Excel)</button>
+                        <button class="settings-btn glass-card export-btn-pro" id="btnExportAll"><span class="settings-btn-icon">📄</span> Export All (CSV)</button>
+                        <h4 class="settings-section-title">Import & Manage</h4>
+                        <button class="settings-btn glass-card" id="btnImport"><span class="settings-btn-icon">📥</span> Import CSV</button>
+                        <input type="file" id="fileImport" accept=".csv" class="hidden">
+                        <button class="settings-btn glass-card danger" id="btnClearAll"><span class="settings-btn-icon">🗑️</span> Clear All Data</button>
+                    </div>
+                    <div class="settings-group"><p class="settings-info">v4.0 Pro — All data stored locally on device.</p></div>
                 </div>
             </div>
         </div>
 
         <!-- DETAIL MODAL -->
-        <div class="modal-overlay hidden" id="detailOverlay"><div class="modal glass-modal detail-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnDetailClose">Close</button><h2 class="modal-title">Detail</h2><div></div></div><div class="modal-body" id="detailBody"></div><div class="detail-actions"><button class="action-btn edit glow-btn" id="btnEditExpense">✏️ Edit</button><button class="action-btn delete" id="btnDeleteExpense">🗑️ Delete</button></div></div></div>
+        <div class="modal-overlay hidden" id="detailOverlay"><div class="modal glass-modal detail-modal"><div class="modal-handle"></div><div class="modal-header"><button class="modal-close" id="btnDetailClose">Close</button><h2 class="modal-title">Detail</h2><div></div></div><div class="modal-body" id="detailBody"></div><div class="detail-actions"><button class="action-btn edit glow-btn" id="btnEditExpense">✏️ Edit</button><button class="action-btn duplicate" id="btnDuplicateExpense">📋 Duplicate</button><button class="action-btn delete" id="btnDeleteExpense">🗑️ Delete</button></div></div></div>
+
+        <!-- SPLIT CALCULATOR MODAL -->
+        <div class="modal-overlay hidden" id="splitOverlay">
+            <div class="modal glass-modal">
+                <div class="modal-handle"></div>
+                <div class="modal-header"><button class="modal-close" id="btnSplitClose">Close</button><h2 class="modal-title">Split Bill</h2><div></div></div>
+                <div class="modal-body">
+                    <div class="amount-input-group"><span class="currency-symbol">₹</span><input type="number" id="splitTotal" class="amount-input" placeholder="Total bill" step="0.01" inputmode="decimal"></div>
+                    <div class="form-group"><label class="form-label">Number of People</label><div class="split-people-row"><button class="split-btn" id="splitMinus">−</button><span class="split-count" id="splitCount">2</span><button class="split-btn" id="splitPlus">+</button></div></div>
+                    <div class="form-group"><label class="form-label">Tip %</label><div class="tip-chips" id="tipChips"><div class="pay-chip selected" data-tip="0">0%</div><div class="pay-chip" data-tip="5">5%</div><div class="pay-chip" data-tip="10">10%</div><div class="pay-chip" data-tip="15">15%</div><div class="pay-chip" data-tip="20">20%</div></div></div>
+                    <div class="split-result glass-card" id="splitResult">
+                        <div class="split-result-label">Per Person</div>
+                        <div class="split-result-amount" id="splitPerPerson">₹0</div>
+                        <div class="split-result-detail" id="splitDetail"></div>
+                    </div>
+                    <button class="glow-btn split-save-btn" id="btnSplitSave">💸 Add as Expense</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEMPLATES MODAL -->
+        <div class="modal-overlay hidden" id="templatesOverlay">
+            <div class="modal glass-modal">
+                <div class="modal-handle"></div>
+                <div class="modal-header"><button class="modal-close" id="btnTemplatesClose">Done</button><h2 class="modal-title">Templates</h2><div></div></div>
+                <div class="modal-body">
+                    <div id="templatesManageList"></div>
+                    <p class="empty-hint" id="templatesEmpty">Save an expense as a template from the detail view, or tap + below.</p>
+                    <button class="glow-btn split-save-btn" id="btnNewTemplate">+ Create Template</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOOLS PAGE -->
+        <section class="page" id="page-tools">
+            <div class="scroll-content">
+                <h2 class="section-title animate-in" style="padding:16px 0 8px">🧰 Tools</h2>
+                <div class="tools-grid">
+                    <div class="tool-card glass-card animate-in" style="--delay:0.1s" id="toolSplit"><div class="tool-icon">✂️</div><div class="tool-name">Split Bill</div><div class="tool-desc">Divide expenses among friends</div></div>
+                    <div class="tool-card glass-card animate-in" style="--delay:0.15s" id="toolReport"><div class="tool-icon">📊</div><div class="tool-name">Report</div><div class="tool-desc">Professional monthly report</div></div>
+                    <div class="tool-card glass-card animate-in" style="--delay:0.2s" id="toolTags"><div class="tool-icon">🏷️</div><div class="tool-name">Tags</div><div class="tool-desc">View expenses by tag</div></div>
+                </div>
+
+                <div class="report-section glass-card animate-in" style="--delay:0.35s" id="reportSection">
+                    <h3 class="chart-title">� Monthly Report</h3>
+                    <div id="reportContent"></div>
+                    <div class="report-download-row">
+                        <button class="report-dl-btn pdf-btn" id="btnDownloadPDF"><span class="dl-icon">📕</span> Download PDF</button>
+                        <button class="report-dl-btn excel-btn" id="btnDownloadExcel"><span class="dl-icon">📗</span> Download Excel</button>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <div class="toast hidden" id="toast"></div>
         <canvas id="confetti" class="confetti-canvas hidden"></canvas>
